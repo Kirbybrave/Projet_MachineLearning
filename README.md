@@ -89,5 +89,5 @@ Quelques exemples de graphiques produits dans le notebook :
 
 ## 📜 Licence
 
-Ce projet est distribué sous licence **MIT**.  
+Ce projet est distribué sous licence scolaire.  
 Vous êtes libres de le réutiliser, le modifier et le partager sous réserve de mentionner les auteurs originaux.
