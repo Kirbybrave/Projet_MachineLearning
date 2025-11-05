@@ -4,27 +4,6 @@ Created on Wed Nov  5 09:34:43 2025
 
 @author: Jmaro
 """
-
-
-
-# The essentials
-!pip install pandas
-!pip install seaborn
-!pip install matplotlib
-!pip install numpy
-
-# For the map
-!pip install geopandas
-!pip install contextily
-!pip install shapely
-
-# For the machin learning
-!pip install scikit-learn
-!pip install xgboost
-!pip install lightgbm
-
-
-
 # Cell 1
 # List of essential libraries (Retrieve data from CSV files + plot curves)
 import pandas as pd
@@ -60,6 +39,22 @@ from lightgbm import LGBMRegressor
 
 
 # Cell 2
+
+# The essentials
+!pip install pandas
+!pip install seaborn
+!pip install matplotlib
+!pip install numpy
+
+# For the map
+!pip install geopandas
+!pip install contextily
+!pip install shapely
+
+# For the machin learning
+!pip install scikit-learn
+!pip install xgboost
+!pip install lightgbm
 
 # Cell 3
 df = pd.read_csv('AB_NYC_2019.csv')
@@ -502,3 +497,4 @@ plt.show()
 # Cell 37
 df_final_test = pd.DataFrame({'price_log': y_valid_pred})
 print(df_final_test)
+
