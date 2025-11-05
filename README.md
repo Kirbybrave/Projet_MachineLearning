@@ -68,25 +68,30 @@ L’objectif est de construire un modèle performant permettant d’estimer le p
 
 ---
 
-## 📊 Résultats attendus
+## 📊 Résultats 
 
 - Nettoyage et préparation du dataset Airbnb  
 - Visualisation des corrélations et variables importantes  
-- Entraînement de plusieurs modèles (ex. : **Linear Regression**, **Random Forest**, **XGBoost**, **LightGBM**)  
+- Entraînement de plusieurs modèles (ex. : **Ridge Regression**, **Random Forest**, **XGBoost**, **LightGBM**,**Gradient Boosting Regressor** )  
 - Évaluation des performances (RMSE, R², etc.)  
 - Interprétation des résultats et recommandations  
 
 ---
 
 ## 📈 Exemple de visualisation
-
 Quelques exemples de graphiques produits dans le notebook :
-- Répartition des prix par quartier
-- Corrélation entre la taille du logement et le prix
-- Importance des variables pour le modèle final
+
+- Répartition géographique des prix sur la carte de New York  
+- Répartition des prix par **groupe de quartier**  
+- Répartition des prix par **type de logement**  
+- Distribution du **prix brut** et du **log(price)**  
+- **Boxplots** : comparaison des catégories de logements  
+- **Corrélation des variables** avec le prix (bar chart)  
+- **Nuage de points (scatter plot)** : valeurs réelles vs prédictions  
+- **Histogramme des résidus (erreurs)**  
+- **Importance des variables** pour le modèle final  
 
 ---
-
 ## 📜 Licence
 
 Ce projet est distribué sous licence scolaire.  
