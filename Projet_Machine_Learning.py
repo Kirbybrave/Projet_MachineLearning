@@ -2,9 +2,12 @@
 """
 Created on Wed Nov  5 09:34:43 2025
 
-@author: Jmaro
-"""
-# Cell 1
+# The essentials
+
+# For the map
+
+# For the machin learning
+
 # List of essential libraries (Retrieve data from CSV files + plot curves)
 import pandas as pd
 import seaborn as sns
@@ -22,6 +25,7 @@ from sklearn.preprocessing import LabelEncoder
 # For the prediction model
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -37,45 +41,19 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import Ridge
 from lightgbm import LGBMRegressor
 
-
-# Cell 2
-
-# The essentials
-!pip install pandas
-!pip install seaborn
-!pip install matplotlib
-!pip install numpy
-
-# For the map
-!pip install geopandas
-!pip install contextily
-!pip install shapely
-
-# For the machin learning
-!pip install scikit-learn
-!pip install xgboost
-!pip install lightgbm
-
-# Cell 3
 df = pd.read_csv('AB_NYC_2019.csv')
 df.head()
 
-# Cell 4
 print(df)
 
-# Cell 5
 df.columns
 
-# Cell 6
 df.info()
 
-# Cell 7
 df.describe()
 
-# Cell 8
 df.shape
 
-# Cell 9
 # Clean the data (keep only valid points)
 df_map = df.dropna(subset=['latitude', 'longitude', 'price']).copy()
 
@@ -114,8 +92,6 @@ plt.title("Geographical distribution of prices (price)", fontsize=15)
 plt.tight_layout()
 plt.show()
 
-
-# Cell 10
 plt.figure(figsize=(10, 6))
 sns.boxplot(
     data=df, 
@@ -125,15 +101,14 @@ sns.boxplot(
     showfliers=False  # remove extreme values for see better the box
 )
 
-plt.title("Price by type of reservation", fontsize=16)
-plt.xlabel("Type of reservation", fontsize=12)
+plt.title("Price by neighbourhood_group", fontsize=16)
+plt.xlabel("Neighbourhood_group", fontsize=12)
 plt.ylabel("Price in dollars", fontsize=12)
 plt.xticks(rotation=15)
 plt.grid(axis='y', linestyle='--', alpha=0.6)
 plt.tight_layout()
 plt.show()
 
-# Cell 11
 plt.figure(figsize=(10, 6))
 sns.boxplot(
     data=df, 
@@ -151,15 +126,12 @@ plt.grid(axis='y', linestyle='--', alpha=0.6)
 plt.tight_layout()
 plt.show()
 
-
-# Cell 12
 sns.histplot(df['price'], kde=True, bins=30)
 plt.title("Distribution of the price")
 plt.xlabel("Price in dollars")
 plt.ylabel("Frequence")
 plt.show()
 
-# Cell 13
 plt.figure(figsize=(10,5))
 plt.scatter(df.index, df['price'], alpha=0.5)
 plt.title("Scatter plot of the price")
@@ -167,37 +139,45 @@ plt.xlabel("Index")
 plt.ylabel("Price")
 plt.show()
 
-# Cell 14
+# Coordinates of Manhattan center (Times Square)
+center_lat = 40.7580
+center_lon = -73.9855
+
+df['distance_center'] = (
+    (df['latitude'] - center_lat)**2 +
+    (df['longitude'] - center_lon)**2
+)**0.5
+
+price_rank = {
+    'Manhattan': 5,
+    'Brooklyn': 4,
+    'Queens': 3,
+    'Staten Island': 2,
+    'Bronx': 1
+}
+
+df['neighbourhood_rank'] = df['neighbourhood_group'].map(price_rank)
+
+df['is_entire_home'] = (df['room_type'] == 'Entire home/apt').astype(int)
+
 for col in df.select_dtypes(include='object').columns:
     df[col] = df[col].fillna('Missing')
     freq = df[col].value_counts(normalize=True)
     df[col] = df[col].map(freq)
 
-# Cell 15
 df.head()
 
-# Cell 16
 df = df[df['price'] > 0]
 
-# Cell 17
 df.info()
 
-# Cell 18
 df.shape
 
-# Cell 19
-df = df.dropna()
+# df = df.dropna() 
 
-
-# Cell 20
-df.shape
-
-# Cell 21
 df['price_log'] = np.log1p(df['price'])
 df = df.drop(columns=['price'])
 
-
-# Cell 22
 # Clean the data (keep only valid points)
 df_map = df.dropna(subset=['latitude', 'longitude', 'price_log']).copy()
 
@@ -236,25 +216,12 @@ plt.title("Geographical distribution of prices (price_log)", fontsize=15)
 plt.tight_layout()
 plt.show()
 
-
-# Cell 23
 sns.histplot(df['price_log'], kde=True, bins=30)
 plt.title("Distribution of log price")
 plt.xlabel("log_price")
 plt.ylabel("Frequence")
 plt.show()
 
-# Cell 24
-# List of columns to remove
-columns_to_drop = ['latitude', 'longitude', 'host_id']
-
-# Drop them in place
-df.drop(columns=columns_to_drop, inplace=True)
-print(df)
-
-
-
-# Cell 25
 # Compute the correlation matrix (numeric columns only)
 correlation_matrix = df.corr(numeric_only=True)
 
@@ -273,18 +240,14 @@ plt.ylabel('Variables')
 plt.tight_layout()
 plt.show()
 
-
-# Cell 26
 # List of columns to remove
-columns_to_drop = ['neighbourhood', 'name']
+columns_to_drop = ['host_id', 'id']
 
 # Drop them in place
 df.drop(columns=columns_to_drop, inplace=True)
 print(df)
 
 
-
-# Cell 27
 y = df['price_log']
 X = df.drop(columns=['price_log'])  # Remove 'price_log' from the features
 
@@ -327,19 +290,15 @@ y_valid_pred = model.predict(X_valid)
 pd.DataFrame({'price_log': y_valid_pred}).to_csv('predictions.csv', index=False)
 print("Predictions saved in predictions.csv")
 
-
-# Cell 28
 df_final = pd.read_csv("predictions.csv")
 print(df_final)
 
-# Cell 29
 sns.histplot(df_final['price_log'], kde=True, bins=30)
 plt.title("Distribution of price_log")
 plt.xlabel("log_price")
 plt.ylabel("Frequency")
 plt.show()
 
-# Cell 30
 # Predictions on validation set
 residuals = y_valid - y_valid_pred
 
@@ -348,14 +307,11 @@ plt.title("Distribution of residuals (errors)")
 plt.xlabel("log_price - prediction")
 plt.show()
 
-# Cell 31
 rmse = np.sqrt(mean_squared_error(y_valid, y_valid_pred))
 print(f"Root Mean Squared Error (RMSE) sur train : {rmse:.3f}")
 
-# Cell 32
 print(f"Validation score: {r2_score(y_true=y_valid, y_pred=y_valid_pred)}")
 
-# Cell 33
 plt.figure(figsize=(8, 6))
 sns.scatterplot(x=y_valid, y=y_valid_pred, alpha=0.5)
 plt.plot([y_valid.min(), y_valid.max()], [y_valid.min(), y_valid.max()], color='red', linestyle='--')
@@ -365,11 +321,9 @@ plt.title("Real vs predicted")
 plt.grid(True)
 plt.show()
 
-# Cell 34
 # Target and features
 y_train = df['price_log']
 X_train = df.drop(columns=['price_log'])
-X_test = df.copy()
 
 # Split 80% for training and 20% for validation
 X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
@@ -415,10 +369,10 @@ for name, regressor in models.items():
     ])
     
     pipeline.fit(X_train, y_train)
-    y_valid_pred = pipeline.predict(X_train)
+    y_valid_pred = pipeline.predict(X_valid)
     
-    r2 = r2_score(y_train, y_valid_pred)
-    rmse = np.sqrt(mean_squared_error(y_train, y_valid_pred))
+    r2 = r2_score(y_valid, y_valid_pred)
+    rmse = np.sqrt(mean_squared_error(y_valid, y_valid_pred))
     
     results.append({
         'Model': name,
@@ -431,52 +385,93 @@ results_df = pd.DataFrame(results).sort_values(by='R² (train)', ascending=False
 print(results_df)
 
 
+# ================================
+# 1. Split data
+# ================================
+y = df['price_log']
+X = df.drop(columns=['price_log'])
 
-# Cell 35
-#  Detect numeric and categorical columns
-numeric_features = X_train.select_dtypes(include=['int64', 'float64']).columns.tolist()
-categorical_features = X_train.select_dtypes(include=['object', 'category']).columns.tolist()
+X_train, X_valid, y_train, y_valid = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
-#  Preprocessing pipelines
+# ================================
+# 2. Detect numeric/categorical
+# ================================
+numeric_features = [
+    col for col in X_train.columns
+    if pd.api.types.is_numeric_dtype(X_train[col])
+]
+
+categorical_features = [
+    col for col in X_train.columns
+    if pd.api.types.is_string_dtype(X_train[col])
+]
+
+# ================================
+# 3. Preprocessing
+# ================================
 numeric_transformer = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='median'))
 ])
 
 categorical_transformer = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='most_frequent')),
-    ('encoder', OneHotEncoder(handle_unknown='ignore'))
+    ('ordinal', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1))
 ])
 
-#  Combine everything in a ColumnTransformer
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', numeric_transformer, numeric_features),
-        ('cat', categorical_transformer, categorical_features)
-    ]
+    ],
+    remainder='drop'
 )
 
-#  Full pipeline with RandomForest
+# ================================
+# 4. Best params from the search
+# ================================
+xgb = XGBRegressor(
+    subsample=0.6,
+    reg_lambda=2,
+    reg_alpha=0.1,
+    n_estimators=800,
+    min_child_weight=3,
+    max_depth=10,
+    learning_rate=0.01,
+    gamma=0.1,
+    colsample_bytree=0.8,
+    objective='reg:squarederror',
+    tree_method='hist',
+    random_state=42
+)
+
+# ================================
+# 5. Full training pipeline
+# ================================
 pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('regressor', RandomForestRegressor(n_estimators=100, random_state=42))
+    ('regressor', xgb)
 ])
 
-#  Train the model
 pipeline.fit(X_train, y_train)
 
-#  Predict on X_test
-y_pred = pipeline.predict(X_test)
-
-#  Create the output CSV file
-df_final = pd.DataFrame({'id': id, 'price_log': y_pred})
-df_final.to_csv('predictions_random_forest.csv', index=False)
-
-print("Predictions saved in predictions_random_forest.csv")
-
-# Cell 36
-# Predictions on validation set
+# ================================
+# 6. Prediction on validation
+# ================================
 y_valid_pred = pipeline.predict(X_valid)
-residuals = y_valid - y_valid_pred
+
+# ================================
+# 7. Save predictions
+# ================================
+pd.DataFrame({'price_log': y_valid_pred}).to_csv(
+    'predictions_xgb_targetenc.csv', index=False
+)
+
+print("Saved predictions_xgb_targetenc.csv")
+
+# Predictions on validation set
+y_pred = pipeline.predict(X_valid)
+residuals = y_valid - y_pred
 
 # Residual distribution
 sns.histplot(residuals, kde=True)
@@ -486,7 +481,7 @@ plt.show()
 
 # Real vs Predicted scatter plot
 plt.figure(figsize=(8, 6))
-sns.scatterplot(x=y_valid, y=y_valid_pred, alpha=0.5)
+sns.scatterplot(x=y_valid, y=y_pred, alpha=0.5)
 plt.plot([y_valid.min(), y_valid.max()], [y_valid.min(), y_valid.max()], color='red', linestyle='--')
 plt.xlabel("Actual values (price_log)")
 plt.ylabel("Predicted values")
@@ -494,8 +489,11 @@ plt.title("Actual vs Predicted")
 plt.grid(True)
 plt.show()
 
-# Cell 37
-df_final_test = pd.DataFrame({'price_log': y_valid_pred})
-print(df_final_test)
+rmse = np.sqrt(mean_squared_error(y_valid, y_valid_pred))
+print(f"Root Mean Squared Error (RMSE) sur train : {rmse:.3f}")
 
+print(f"Validation score: {r2_score(y_true=y_valid, y_pred=y_valid_pred)}")
+
+df_final_test = pd.DataFrame({'price_log': y_pred})
+print(df_final_test)
 
